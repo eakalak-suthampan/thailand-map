@@ -1,0 +1,49 @@
+---
+title: "Thailand GPP And Population 2013"
+author: "Eakalak Suthampan"
+date: "February 16, 2017"
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
+```
+
+## Thailand gross provincial product (GPP) 2013
+```{r}
+suppressPackageStartupMessages(library(rgdal))
+suppressPackageStartupMessages(library(leaflet))
+
+url <- "thailand-provinces.geojson"
+file <- "thai_gpp.csv"
+
+thaiProvinces <- readOGR(dsn = url,  encoding = "UTF-8")
+filterOutProvinces <- c("Phatthalung (Songkhla Lake)","Songkhla (Songkhla Lake)")
+thaiProvinces <- thaiProvinces[!(thaiProvinces$NAME_1 %in% filterOutProvinces),]
+thaiGPP <- read.table(file,header = TRUE,sep = ",")
+
+map1 <- leaflet(thaiProvinces) %>% addTiles()
+pal1 <-colorNumeric("Blues", domain = thaiGPP$GPP_Million_Dollar)
+popup1 <- paste(as.character(thaiProvinces$NAME_1),as.character(thaiGPP$GPP_Million_Dollar),"Million $US") 
+map1 %>%
+        addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1,
+                    color = ~pal1(thaiGPP$GPP_Million_Dollar), popup = popup1) %>%
+        addLegend("bottomright", pal = pal1, values = ~thaiGPP$GPP_Million_Dollar,
+                  title = "Est. Thailand GPP 2013 (Million $US)",
+                  opacity = 1)
+```
+
+## Thailand population 2013
+```{r}
+map2 <- leaflet(thaiProvinces) %>% addTiles()
+pal2 <- colorNumeric("Greens", domain = thaiGPP$Population)
+popup2 <- paste(as.character(thaiProvinces$NAME_1),as.character(thaiGPP$Population)) 
+map2 %>%
+        addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1,
+                    color = ~pal2(thaiGPP$Population), popup = popup2) %>%
+        addLegend("bottomright", pal = pal2, values = ~thaiGPP$Population,
+                  title = "Thailand Population 2013 (Persons)", opacity = 1)
+
+```
